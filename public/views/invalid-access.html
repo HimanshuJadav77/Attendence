@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invalid Access - Student Attendance Portal</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body style="background: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;">
+
+  <div class="mobile-card" style="max-width: 480px; width: 100%; text-align: center;">
+    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 2rem 1.5rem;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem;">⛔</div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;">Direct Server Access Is Not Valid</h2>
+      <p style="font-size: 0.85rem; opacity: 0.95; margin-top: 0.25rem;">Student Attendance Portal Required</p>
+    </div>
+
+    <div class="mobile-card-body" style="padding: 1.75rem;">
+      <div class="alert alert-warning" style="text-align: left; margin-bottom: 1.25rem; font-size: 0.85rem;">
+        <div>
+          <strong>Notice:</strong> You connected to the host server without specifying <code>/student</code>.
+          Direct access to the administration dashboard is restricted to the host machine.
+        </div>
+      </div>
+
+      <div style="background: #f1f5f9; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: left; font-size: 0.8rem;">
+        <div class="device-row">
+          <span class="label">Your Device IP:</span>
+          <span id="detectedClientIp" class="val">Connecting...</span>
+        </div>
+        <div class="device-row">
+          <span class="label">Required URL:</span>
+          <span class="val font-mono" style="color: var(--primary);">/student</span>
+        </div>
+        <div class="device-row">
+          <span class="label">Status:</span>
+          <span class="badge badge-danger">Host Access Blocked</span>
+        </div>
+      </div>
+
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        To record your attendance for the current lecture, please proceed to the Student Portal:
+      </p>
+
+      <a id="btnGoStudent" href="/student" class="btn btn-primary btn-lg btn-full" style="font-size: 1rem;">
+        📱 Open Student Attendance Portal
+      </a>
+
+      <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+        Auto-redirecting in <strong id="redirectCountdown" style="color: var(--primary);">4</strong> seconds...
+        (<a href="#" id="btnCancelRedirect" style="color: var(--text-muted); text-decoration: underline;">Cancel</a>)
+      </div>
+
+      <!-- Optional Instructor Unlock Accordion -->
+      <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px dashed var(--border); font-size: 0.75rem;">
+        <details>
+          <summary style="cursor: pointer; color: var(--text-muted); font-weight: 600;">
+            🔑 Are you the Instructor? Unlock Dashboard
+          </summary>
+          <div style="margin-top: 0.75rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); text-align: left;">
+            <label class="form-label" style="font-size: 0.75rem;">Enter Admin PIN:</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="password" id="adminPinInput" class="form-input" style="font-size: 0.85rem;" placeholder="Admin PIN">
+              <button id="btnUnlockAdmin" class="btn btn-primary btn-sm">Unlock</button>
+            </div>
+            <p id="pinError" style="color: #dc2626; font-size: 0.7rem; margin-top: 0.4rem; display: none;">
+              Incorrect Admin PIN.
+            </p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let countdown = 4;
+    let redirectTimer = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('/api/device/my-info');
+        const data = await res.json();
+        if (data.clientIp) {
+          document.getElementById('detectedClientIp').textContent = data.clientIp;
+        }
+      } catch (e) {
+        document.getElementById('detectedClientIp').textContent = 'Network Client';
+      }
+
+      // Start countdown
+      const countEl = document.getElementById('redirectCountdown');
+      redirectTimer = setInterval(() => {
+        countdown--;
+        if (countEl) countEl.textContent = countdown;
+        if (countdown <= 0) {
+          clearInterval(redirectTimer);
+          window.location.href = '/student';
+        }
+      }, 1000);
+
+      document.getElementById('btnCancelRedirect').addEventListener('click', (e) => {
+        e.preventDefault();
+        clearInterval(redirectTimer);
+        countEl.parentElement.textContent = 'Auto-redirect cancelled.';
+      });
+
+      // Instructor PIN unlock
+      document.getElementById('btnUnlockAdmin').addEventListener('click', async () => {
+        const pin = document.getElementById('adminPinInput').value.trim();
+        if (!pin) return;
+
+        // Set cookie and test
+        document.cookie = `admin_pin=${pin}; path=/; max-age=86400`;
+        const testRes = await fetch('/api/network/interfaces', {
+          headers: { 'x-admin-pin': pin }
+        });
+        const testData = await testRes.json();
+        if (testData.success) {
+          clearInterval(redirectTimer);
+          window.location.href = `/?pin=${pin}`;
+        } else {
+          document.getElementById('pinError').style.display = 'block';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Digital ID Pass - MAC Verified</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body style="background: #f1f5f9; min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="nav-container">
+      <a href="/" class="logo-group">
+        <div class="logo-icon">📡</div>
+        <div class="logo-text">
+          <h1>Hotspot Attendance</h1>
+          <p>Student Digital ID Pass</p>
+        </div>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/">📊 Live Session</a></li>
+          <li><a href="/student">📱 Mark Attendance</a></li>
+          <li><a href="/students">👥 Directory</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="main-wrapper" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem;">
+    
+    <!-- Pass Selector / Search Bar -->
+    <div style="max-width: 380px; width: 100%; margin-bottom: 1.5rem;">
+      <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="passRollInput" class="form-input" placeholder="Enter Roll No (e.g. CS-2024-001)" style="text-transform: uppercase;">
+        <button id="btnFindPass" class="btn btn-primary btn-sm">View Pass</button>
+      </div>
+    </div>
+
+    <!-- The Digital ID Pass Card -->
+    <div id="passCard" class="id-pass-card" style="display: none;">
+      <div class="id-pass-header">
+        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.85;">
+          INSTITUTE OF TECHNOLOGY
+        </div>
+        <h2 style="font-size: 1.25rem; font-weight: 800; margin-top: 0.2rem;">Digital Attendance Pass</h2>
+        <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; margin-top: 0.5rem;">
+          <span>🔒</span> <span>HARDWARE MAC BOUND</span>
+        </div>
+      </div>
+
+      <div class="id-pass-body">
+        <div style="width: 72px; height: 72px; background: #e0e7ff; color: #4338ca; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: -2.5rem auto 1rem auto; border: 4px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          🎓
+        </div>
+
+        <h3 id="cardStudentName" style="font-size: 1.25rem; font-weight: 800; color: #0f172a;">Aarav Sharma</h3>
+        <p id="cardDepartment" style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 1rem;">Computer Science & Engineering</p>
+
+        <!-- MAC QR Code Container -->
+        <div style="background: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 1rem;">
+          <img id="cardQrImg" src="" style="width: 200px; height: 200px; display: block;" alt="Student MAC QR">
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem; font-size: 0.8rem; text-align: left; margin-bottom: 1.25rem;">
+          <div class="device-row">
+            <span class="label">Roll Number:</span>
+            <span id="cardRollNo" class="val font-mono">CS-2024-001</span>
+          </div>
+          <div class="device-row">
+            <span class="label">Registered MAC:</span>
+            <span id="cardMac" class="val font-mono" style="color: var(--primary);">2A:32:AB:A5:AB:97</span>
+          </div>
+          <div class="device-row">
+            <span class="label">Status:</span>
+            <span id="cardStatusBadge" class="badge badge-success">Active & Bound</span>
+          </div>
+        </div>
+
+        <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.3; margin-bottom: 1.25rem;">
+          This digital pass is cryptographically signed and locked to your device hardware MAC address. Scanning marks verified attendance.
+        </p>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="btnPrintPass" class="btn btn-outline btn-full btn-sm">🖨️ Print Pass</button>
+          <a href="/student" class="btn btn-primary btn-full btn-sm">📱 Mark Today</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error notice -->
+    <div id="passErrorNotice" class="alert alert-danger" style="display: none; max-width: 380px; width: 100%;">
+      Student not found. Please check Roll Number.
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const rollFromUrl = urlParams.get('roll') || localStorage.getItem('last_roll_number') || 'CS-2024-001';
+
+      if (rollFromUrl) {
+        document.getElementById('passRollInput').value = rollFromUrl;
+        await loadPassByRoll(rollFromUrl);
+      }
+
+      document.getElementById('btnFindPass').addEventListener('click', async () => {
+        const roll = document.getElementById('passRollInput').value.trim();
+        if (roll) await loadPassByRoll(roll);
+      });
+
+      document.getElementById('btnPrintPass').addEventListener('click', () => {
+        window.print();
+      });
+    });
+
+    async function loadPassByRoll(rollNumber) {
+      const errNotice = document.getElementById('passErrorNotice');
+      const card = document.getElementById('passCard');
+      errNotice.style.display = 'none';
+
+      try {
+        // Fetch student list to find student ID
+        const res = await fetch(`/api/students?search=${encodeURIComponent(rollNumber)}`);
+        const data = await res.json();
+
+        if (data.success && data.students.length > 0) {
+          const student = data.students.find(s => s.roll_number.toUpperCase() === rollNumber.toUpperCase()) || data.students[0];
+          
+          // Generate student MAC QR pass
+          const qrRes = await fetch(`/api/students/${student.id}/mac-qr`);
+          const qrData = await qrRes.json();
+
+          if (qrData.success) {
+            document.getElementById('cardStudentName').textContent = student.name;
+            document.getElementById('cardDepartment').textContent = student.department;
+            document.getElementById('cardRollNo').textContent = student.roll_number;
+            document.getElementById('cardMac').textContent = student.mapped_mac || 'NOT YET BOUND';
+            document.getElementById('cardQrImg').src = qrData.qrDataUrl;
+
+            const badge = document.getElementById('cardStatusBadge');
+            if (student.mapped_mac) {
+              badge.className = 'badge badge-success';
+              badge.textContent = 'Active & Bound';
+            } else {
+              badge.className = 'badge badge-warning';
+              badge.textContent = 'Unbound (First Scan Will Bind)';
+            }
+
+            card.style.display = 'block';
+          }
+        } else {
+          card.style.display = 'none';
+          errNotice.style.display = 'block';
+          errNotice.textContent = `No student found with Roll Number '${rollNumber}'`;
+        }
+      } catch (err) {
+        card.style.display = 'none';
+        errNotice.style.display = 'block';
+        errNotice.textContent = 'Error loading pass: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>

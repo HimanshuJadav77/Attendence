@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wi-Fi Hotspot & MAC Setup Guide - Hotspot Attendance</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="nav-container">
+      <a href="/" class="logo-group">
+        <div class="logo-icon">📡</div>
+        <div class="logo-text">
+          <h1>Hotspot Attendance</h1>
+          <p>Deployment & Hotspot Guide</p>
+        </div>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/">📊 Live Session</a></li>
+          <li><a href="/students">👥 Students Directory</a></li>
+          <li><a href="/reports">📑 Reports & History</a></li>
+          <li><a href="/scanner">📷 Kiosk Scanner</a></li>
+          <li><a href="/hotspot-guide" class="active">📶 Hotspot Guide</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="main-wrapper" style="max-width: 860px;">
+    <div class="card">
+      <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+        📶 Teacher & Student Hotspot Deployment Guide
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Follow these steps to host an un-proxyable attendance session in any classroom, lecture hall, or lab.
+      </p>
+
+      <!-- Step 1 -->
+      <div style="background: #f8fafc; border-left: 4px solid var(--primary); padding: 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
+          Step 1: Host Creates the Wi-Fi Hotspot
+        </h3>
+        <p style="margin-top: 0.4rem; font-size: 0.875rem; color: #475569;">
+          The teacher or host computer serves as the Wi-Fi hotspot and server.
+        </p>
+        <div style="margin-top: 0.75rem; font-size: 0.85rem; line-height: 1.6;">
+          <strong>On Windows 10 & 11:</strong>
+          <ol style="margin-left: 1.5rem; margin-top: 0.25rem;">
+            <li>Press <kbd>Win + I</kbd> to open <strong>Settings</strong>.</li>
+            <li>Go to <strong>Network & Internet</strong> ➔ <strong>Mobile Hotspot</strong>.</li>
+            <li>Toggle <strong>Mobile Hotspot</strong> to <strong style="color: #16a34a;">ON</strong>.</li>
+            <li>Set your Network Name (e.g. <code>Classroom-Attendance</code>) and a simple password.</li>
+            <li>Note: Windows automatically assigns the host IP <code>192.168.137.1</code> to this hotspot.</li>
+          </ol>
+          <div style="margin-top: 0.5rem;">
+            <strong>On Android / iPhone Hotspot or College Wi-Fi:</strong>
+            <p style="color: #64748b; font-size: 0.8rem;">
+              You can also connect both teacher laptop and student phones to the same College Wi-Fi router or phone hotspot. The server will automatically detect the interface IP!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="background: #f8fafc; border-left: 4px solid #0284c7; padding: 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
+          Step 2: Start the Node.js Server
+        </h3>
+        <p style="margin-top: 0.4rem; font-size: 0.875rem; color: #475569;">
+          In your terminal inside the project directory, run:
+        </p>
+        <div style="background: #0f172a; color: #38bdf8; padding: 0.75rem 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin-top: 0.5rem;">
+          npm start
+        </div>
+        <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">
+          Open <a href="/" class="text-primary font-bold">http://localhost:3000</a> in your laptop browser, click <strong>Start New Session</strong>, and project the screen to the classroom projector!
+        </p>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="background: #f8fafc; border-left: 4px solid #16a34a; padding: 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
+          Step 3: Students Connect & Scan
+        </h3>
+        <p style="margin-top: 0.4rem; font-size: 0.875rem; color: #475569;">
+          Students in the classroom connect their phones to the Hotspot and point their camera at the projected dynamic QR code.
+        </p>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem; font-size: 0.85rem; line-height: 1.6;">
+          <li>The QR code link directly opens: <code>http://&lt;HOST_IP&gt;:3000/student</code></li>
+          <li>The server checks the student's physical IP in the local ARP table to extract their hardware MAC address.</li>
+          <li>First time students enter their Roll Number to lock and register their phone.</li>
+          <li>On all future lectures, attendance is marked in <strong>1 click</strong> with zero typing!</li>
+        </ul>
+      </div>
+
+      <!-- Device MAC Randomization Note -->
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: #92400e; display: flex; align-items: center; gap: 0.5rem;">
+          💡 Note on Android & iPhone "Private / Randomized MAC"
+        </h3>
+        <p style="font-size: 0.85rem; color: #78350f; margin-top: 0.4rem; line-height: 1.5;">
+          Modern smartphones use "Randomized MAC Address" for privacy. <strong>Good news:</strong> Android and iOS assign a consistent, permanent randomized MAC <em>per Wi-Fi network SSID</em>. This means as long as students connect to the same hotspot SSID (e.g. <code>Classroom-Attendance</code>), their MAC remains 100% constant across every lecture!
+        </p>
+        <p style="font-size: 0.85rem; color: #78350f; margin-top: 0.5rem;">
+          If a student switches or re-randomizes, they can toggle <strong>"Use Device MAC"</strong> in their phone's Wi-Fi Settings ➔ Hotspot Name ➔ Advanced/Privacy. The teacher can also click <strong>"Reset MAC"</strong> on the Students Directory anytime.
+        </p>
+      </div>
+
+      <!-- Anti-Proxy Protection Summary -->
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1.25rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 0.5rem;">
+          🛡️ How Proxy Attendance is 100% Prevented
+        </h3>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem; font-size: 0.85rem; color: #14532d; line-height: 1.6;">
+          <li><strong>Cannot mark from outside:</strong> The server runs on a private local IP (e.g. <code>192.168.137.1</code>). Students outside the classroom cannot reach this address.</li>
+          <li><strong>Cannot proxy for friends:</strong> A single physical phone (MAC) can only submit attendance ONCE per session. If Student A attempts to mark for Student B from the same phone, the system rejects it immediately with an audible alert on the teacher's screen!</li>
+          <li><strong>Cannot forge phone identity:</strong> Student Roll Numbers are bound to their device MAC address in the database. Using someone else's phone triggers an instant "MAC Mismatch" security block.</li>
+          <li><strong>Cannot share QR photos:</strong> The QR code rotates dynamically every 20 seconds. An expired token will be immediately rejected.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

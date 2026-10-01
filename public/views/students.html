@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Directory & MAC Mappings - Hotspot Attendance</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="nav-container">
+      <a href="/" class="logo-group">
+        <div class="logo-icon">📡</div>
+        <div class="logo-text">
+          <h1>Hotspot Attendance</h1>
+          <p>Student Directory & Device Mappings</p>
+        </div>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/">📊 Live Session</a></li>
+          <li><a href="/students" class="active">👥 Students Directory</a></li>
+          <li><a href="/reports">📑 Reports & History</a></li>
+          <li><a href="/scanner">📷 Kiosk Scanner</a></li>
+          <li><a href="/hotspot-guide">📶 Hotspot Guide</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="main-wrapper">
+    <!-- Header Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.5rem; font-weight: 800;">Student Directory & Device Bindings</h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">
+          Manage student enrollments and mapped hardware MAC addresses.
+        </p>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <button id="btnBulkImport" class="btn btn-outline">📥 Bulk Import CSV</button>
+        <button id="btnAddStudent" class="btn btn-primary">+ Add New Student</button>
+      </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="card" style="padding: 1rem 1.25rem; margin-bottom: 1.25rem;">
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 1; min-width: 240px;">
+          <input type="text" id="searchInput" class="form-input" placeholder="🔍 Search by name, roll number, or email...">
+        </div>
+        <div style="width: 200px;">
+          <select id="filterDept" class="form-select">
+            <option value="All">All Departments</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Information Tech">Information Tech</option>
+            <option value="Electronics">Electronics</option>
+          </select>
+        </div>
+        <div style="width: 180px;">
+          <select id="filterMapped" class="form-select">
+            <option value="all">All Devices</option>
+            <option value="true">Bound MACs Only</option>
+            <option value="false">Unbound / Pending</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Roll Number</th>
+              <th>Student Name</th>
+              <th>Department</th>
+              <th>Hardware MAC Binding</th>
+              <th>Bound At</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                Loading students directory...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Student Modal -->
+  <div id="addStudentModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem;">Add New Student</h3>
+      <form id="addStudentForm">
+        <div class="form-group">
+          <label class="form-label">Roll Number *</label>
+          <input type="text" id="newRoll" class="form-input" placeholder="e.g. CS-2024-005" required style="text-transform: uppercase;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="newName" class="form-input" placeholder="e.g. Priya Sharma" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="newEmail" class="form-input" placeholder="e.g. priya@college.edu">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <select id="newDept" class="form-select">
+            <option value="Computer Science">Computer Science</option>
+            <option value="Information Tech">Information Tech</option>
+            <option value="Electronics">Electronics</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pre-bind MAC Address (Optional)</label>
+          <input type="text" id="newMac" class="form-input font-mono" placeholder="Leave empty to auto-bind on first scan">
+          <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem;">
+            Format: XX:XX:XX:XX:XX:XX. If empty, student can auto-bind their phone on first attendance.
+          </p>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline modal-close">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manual Bind MAC Modal -->
+  <div id="bindMacModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">Manual MAC Binding</h3>
+      <p id="bindStudentTitle" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">
+        Bind or update hardware MAC for student.
+      </p>
+      <form id="bindMacForm">
+        <input type="hidden" id="bindStudentId">
+        <div class="form-group">
+          <label class="form-label">Hardware MAC Address *</label>
+          <input type="text" id="bindMacInput" class="form-input font-mono" placeholder="XX:XX:XX:XX:XX:XX" required>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline modal-close">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save MAC</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bulk Import CSV Modal -->
+  <div id="bulkImportModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 600px;">
+      <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">Bulk Import Students (CSV)</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+        Paste CSV text below with columns: <code>roll_number,name,email,department,mapped_mac</code>
+      </p>
+      <div class="form-group">
+        <textarea id="csvDataInput" class="form-input font-mono" rows="8" placeholder="CS-2024-006,Rahul Gupta,rahul@college.edu,Computer Science,
+CS-2024-007,Neha Sen,neha@college.edu,Computer Science,2A:32:AB:11:22:33"></textarea>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem;">
+        <button type="button" id="btnLoadSampleCsv" class="btn btn-outline btn-sm">Insert Sample CSV</button>
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" class="btn btn-outline modal-close">Cancel</button>
+          <button type="button" id="btnProcessImport" class="btn btn-primary">Process Import</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/adminStudents.js"></script>
+</body>
+</html>

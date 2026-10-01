@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Host Dashboard - Wi-Fi Hotspot Attendance</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="nav-container">
+      <a href="/" class="logo-group">
+        <div class="logo-icon">📡</div>
+        <div class="logo-text">
+          <h1>Hotspot Attendance</h1>
+          <p>MAC-Verified Anti-Proxy System</p>
+        </div>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/" class="active">📊 Live Session</a></li>
+          <li><a href="/students">👥 Students Directory</a></li>
+          <li><a href="/reports">📑 Reports & History</a></li>
+          <li><a href="/scanner">📷 Kiosk Scanner</a></li>
+          <li><a href="/hotspot-guide">📶 Hotspot Guide</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="main-wrapper">
+    <!-- Network & Host Information Bar -->
+    <div class="network-bar">
+      <div class="info-item">
+        <span class="pulse-dot"></span>
+        <span>Host Server IP:</span>
+        <strong id="displayHostIp" class="font-mono text-cyan-400">Detecting...</strong>
+      </div>
+      <div class="info-item">
+        <span>Adapter:</span>
+        <span id="displayAdapter" class="badge badge-info">Auto</span>
+      </div>
+      <div class="info-item">
+        <span>Student URL:</span>
+        <a id="studentPortalLink" href="/student" target="_blank" class="font-mono" style="color: #38bdf8; text-decoration: underline;">
+          http://.../student
+        </a>
+      </div>
+      <div class="info-item">
+        <button id="btnRefreshArp" class="btn btn-outline btn-sm" style="color: white; border-color: #475569;">
+          🔄 Scan Hotspot Devices
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Session Hero Section -->
+    <div id="noSessionCard" class="card" style="text-align: center; padding: 3rem 1.5rem; display: none;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🎓</div>
+      <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">No Active Attendance Session</h2>
+      <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem auto;">
+        Connect students to your Wi-Fi Hotspot and click below to launch an anti-proxy attendance session with dynamic rotating QR codes.
+      </p>
+      <button id="btnOpenStartModal" class="btn btn-primary btn-lg">
+        ▶ Start New Attendance Session
+      </button>
+    </div>
+
+    <!-- Live Active Session Section -->
+    <div id="activeSessionCard" style="display: none;">
+      <!-- Stats Row -->
+      <div class="grid-4" style="margin-bottom: 1.5rem;">
+        <div class="stat-box">
+          <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">👥</div>
+          <div>
+            <div id="statPresentCount" class="stat-value">0</div>
+            <div class="stat-label">Students Present</div>
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon" style="background: #f1f5f9; color: #475569;">📚</div>
+          <div>
+            <div id="statTotalStudents" class="stat-value">0</div>
+            <div class="stat-label">Total Enrolled</div>
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">📈</div>
+          <div>
+            <div id="statPercentage" class="stat-value">0%</div>
+            <div class="stat-label">Attendance Rate</div>
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">🛡️</div>
+          <div>
+            <div id="statProxyAlerts" class="stat-value">0</div>
+            <div class="stat-label">Proxy Blocks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main QR & Session Controller Row -->
+      <div class="grid-2">
+        <!-- QR Code Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span id="sessionStatusBadge" class="badge badge-success">● LIVE SESSION</span>
+              <h2 id="sessionSubjectTitle" class="card-title" style="margin-top: 0.25rem;">Computer Networks</h2>
+              <p id="sessionCodeSub" class="text-muted font-mono" style="font-size: 0.8rem;">SES-123456</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="btnFullscreenQr" class="btn btn-outline btn-sm" title="Project QR Code Fullscreen">
+                ⛶ Projector Mode
+              </button>
+              <button id="btnStopSession" class="btn btn-danger btn-sm">
+                ⏹ End Session
+              </button>
+            </div>
+          </div>
+
+          <div class="qr-container">
+            <div class="qr-image-wrapper">
+              <img id="sessionQrImg" src="" alt="Live Session QR Code">
+            </div>
+            <p style="margin-top: 1rem; font-weight: 700; font-size: 1.05rem;">
+              Scan to Mark Attendance
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">
+              Must be connected to host Wi-Fi hotspot. Token rotates every <span id="qrRotationText">20</span>s.
+            </p>
+            <div class="qr-timer-bar">
+              <div id="qrTimerFill" class="qr-timer-fill"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; width: 100%; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">
+              <span>Dynamic Anti-Proxy Token</span>
+              <span id="timerCountdown">Rotating in 20s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Attendee Feed & Security Logs -->
+        <div class="card" style="display: flex; flex-direction: column;">
+          <div class="card-header">
+            <h3 class="card-title">⚡ Real-Time Attendee Stream</h3>
+            <span id="liveFeedCount" class="badge badge-primary">0 Marked</span>
+          </div>
+
+          <div id="attendeeList" style="flex: 1; max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem;">
+            <div id="emptyFeedNotice" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
+              Waiting for students to connect and scan...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Alerts & Connected Network Devices Row -->
+    <div class="grid-2" style="margin-top: 1.5rem;">
+      <!-- Security / Proxy Alerts -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">🛡️ Proxy & Security Alerts</h3>
+          <span class="badge badge-danger">Real-Time Protection</span>
+        </div>
+        <div id="securityAlertsList" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem;">
+          <div style="color: var(--text-muted); text-align: center; padding: 2rem 0; font-size: 0.875rem;">
+            ✓ No unauthorized or proxy attempts detected.
+          </div>
+        </div>
+      </div>
+
+      <!-- Hotspot ARP Devices -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📶 Connected Hotspot Devices (ARP)</h3>
+          <span id="connectedCountBadge" class="badge badge-secondary">0 Found</span>
+        </div>
+        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Device IP</th>
+                <th>Hardware MAC</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="arpDevicesBody">
+              <tr>
+                <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                  Click "Scan Hotspot Devices" above to list active connections.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start Session Modal -->
+  <div id="startSessionModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem;">Start Attendance Session</h3>
+      <form id="startSessionForm">
+        <div class="form-group">
+          <label class="form-label">Subject / Class Name *</label>
+          <input type="text" id="sessionSubject" class="form-input" placeholder="e.g. Data Structures & Algorithms" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department / Batch</label>
+          <select id="sessionDept" class="form-select">
+            <option value="All">All Departments</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Information Tech">Information Tech</option>
+            <option value="Electronics">Electronics</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duration (Minutes)</label>
+          <input type="number" id="sessionDuration" class="form-input" value="15" min="2" max="180">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Network Interface (Host IP)</label>
+          <select id="selectHostInterface" class="form-select"></select>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+          <input type="checkbox" id="allowAutoBind" checked>
+          <label for="allowAutoBind" style="font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+            Allow first-time students to auto-bind device MAC
+          </label>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" id="btnCancelModal" class="btn btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-primary">Start Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Fullscreen Projector Overlay -->
+  <div id="fullscreenOverlay" style="display: none; position: fixed; inset: 0; background: #0f172a; z-index: 999; flex-direction: column; align-items: center; justify-content: center; color: white;">
+    <button id="btnCloseFullscreen" style="position: absolute; top: 2rem; right: 2rem; background: #334155; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600;">
+      ✕ Exit Projector Mode
+    </button>
+    <div style="text-align: center;">
+      <h1 id="fsSubject" style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">Subject Name</h1>
+      <p style="font-size: 1.2rem; color: #94a3b8; margin-bottom: 2rem;">
+        Connect to Wi-Fi Hotspot & Scan with Phone Camera
+      </p>
+      <div style="background: white; padding: 24px; border-radius: 24px; display: inline-block; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+        <img id="fsQrImg" src="" style="width: 380px; height: 380px; display: block;" alt="Projector QR Code">
+      </div>
+      <div style="margin-top: 2rem;">
+        <span style="font-size: 1.5rem; font-family: monospace; background: #1e293b; padding: 0.5rem 1.5rem; border-radius: 9999px; border: 1px solid #334155;">
+          Present: <strong id="fsPresentCount" style="color: #38bdf8;">0</strong>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/hostDashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Reports & Security Logs - Hotspot Attendance</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="nav-container">
+      <a href="/" class="logo-group">
+        <div class="logo-icon">📡</div>
+        <div class="logo-text">
+          <h1>Hotspot Attendance</h1>
+          <p>Reports & Security Logs</p>
+        </div>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/">📊 Live Session</a></li>
+          <li><a href="/students">👥 Students Directory</a></li>
+          <li><a href="/reports" class="active">📑 Reports & History</a></li>
+          <li><a href="/scanner">📷 Kiosk Scanner</a></li>
+          <li><a href="/hotspot-guide">📶 Hotspot Guide</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="main-wrapper">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.5rem; font-weight: 800;">Attendance History & Security Audit</h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">
+          View past lecture sessions, verify student MAC logs, and export CSV reports.
+        </p>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="tabSessionsBtn" class="btn btn-primary btn-sm">📚 Lecture Sessions</button>
+        <button id="tabProxyBtn" class="btn btn-outline btn-sm">🛡️ Proxy Violation Logs</button>
+      </div>
+    </div>
+
+    <!-- Section 1: Sessions List -->
+    <div id="sectionSessions">
+      <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 1.5rem;">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Session Code</th>
+                <th>Subject</th>
+                <th>Department</th>
+                <th>Date & Time</th>
+                <th>Duration</th>
+                <th>Present</th>
+                <th>Status</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="sessionsTableBody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                  Loading sessions...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Selected Session Detail Card -->
+      <div id="sessionDetailCard" class="card" style="display: none;">
+        <div class="card-header">
+          <div>
+            <h3 id="detailSubjectTitle" class="card-title">Subject Attendance Record</h3>
+            <p id="detailSubtitle" style="font-size: 0.8rem; color: var(--text-muted);">Session Details</p>
+          </div>
+          <div>
+            <a id="btnExportCsv" href="#" class="btn btn-success btn-sm">
+              📥 Export to CSV
+            </a>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Roll Number</th>
+                <th>Student Name</th>
+                <th>Department</th>
+                <th>Time Marked</th>
+                <th>IP Address</th>
+                <th>Hardware MAC</th>
+                <th>Verification</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="sessionRecordsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Security & Proxy Logs -->
+    <div id="sectionProxyLogs" style="display: none;">
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Attempted Roll</th>
+                <th>Client IP</th>
+                <th>Detected Hardware MAC</th>
+                <th>Registered MAC</th>
+                <th>Violation Reason</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="proxyLogsTableBody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                  Loading security logs...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/reports.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kiosk Scanner - Scan Student MAC Passes</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="nav-container">
+      <a href="/" class="logo-group">
+        <div class="logo-icon">📡</div>
+        <div class="logo-text">
+          <h1>Hotspot Attendance</h1>
+          <p>Kiosk Scanner Mode</p>
+        </div>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/">📊 Live Session</a></li>
+          <li><a href="/students">👥 Students Directory</a></li>
+          <li><a href="/reports">📑 Reports & History</a></li>
+          <li><a href="/scanner" class="active">📷 Kiosk Scanner</a></li>
+          <li><a href="/hotspot-guide">📶 Hotspot Guide</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="main-wrapper" style="max-width: 600px;">
+    <div class="card" style="text-align: center;">
+      <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.25rem;">Student Pass Scanner (Kiosk Mode)</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">
+        Point your camera at a student's Digital MAC Pass QR code to verify device identity and mark attendance.
+      </p>
+
+      <!-- Camera Scanner Window -->
+      <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 1.25rem;"></div>
+
+      <!-- Controls -->
+      <div style="display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1rem;">
+        <button id="btnStartScan" class="btn btn-primary btn-sm">▶ Start Camera Scanner</button>
+        <button id="btnStopScan" class="btn btn-outline btn-sm" disabled>⏹ Stop Camera</button>
+      </div>
+
+      <!-- Scan Result Box -->
+      <div id="scanResultAlert" class="alert" style="display: none; text-align: left;"></div>
+
+      <div style="background: #f8fafc; border-radius: 10px; padding: 1rem; font-size: 0.75rem; color: var(--text-muted); text-align: left;">
+        <strong>💡 How this works:</strong>
+        <p style="margin-top: 0.25rem;">
+          Students display their Digital Pass on their phone screen. The camera scans the encoded signature, maps their Roll Number and hardware MAC, and validates their presence against the local active session.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/scanner.js"></script>
+</body>
+</html>
